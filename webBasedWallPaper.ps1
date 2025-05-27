@@ -1,9 +1,9 @@
 # Fetch TODO JSON from API
-$todoList = Invoke-RestMethod -Uri "http://localhost:5000/todos"
+$todoList = Invoke-RestMethod -Uri "https://nitish378.pythonanywhere.com//todos"
 
 Add-Type -AssemblyName System.Drawing
 
-$imageUrl = "http://localhost:5000/template.jpg"
+$imageUrl = "https://nitish378.pythonanywhere.com/template.jpg"
 $inputImage = "template.png"
 
 if (-Not (Test-Path $inputImage)) {
