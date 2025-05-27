@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Desktop TODO List</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="p-4">
+  <div class="container">
+    <h2 class="mb-4">TODO List</h2>
+    <form id="todoForm" class="mb-3">
+      <div class="input-group">
+        <input type="text" id="taskInput" class="form-control" placeholder="Enter task (max 14 chars)" maxlength="14" required />
+        <select id="priorityInput" class="form-select" required>
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Add</button>
+      </div>
+      <div id="errorMsg" class="text-danger mt-2"></div>
+    </form>
+
+    <table class="table table-striped" id="todoTable">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Priority</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script>
+// const apiUrl = "http://localhost:5000/todos";
+// const apiUrl = "/todos";
+const apiUrl = "{{ base_url }}todos";
+const form = document.getElementById('todoForm');
+const taskInput = document.getElementById('taskInput');
+const priorityInput = document.getElementById('priorityInput');
+const errorMsg = document.getElementById('errorMsg');
+const tbody = document.querySelector('#todoTable tbody');
+
+async function fetchTodos() {
+  const res = await fetch(apiUrl);
+  const todos = await res.json();
+  renderTodos(todos);
+}
+
+function renderTodos(todos) {
+  tbody.innerHTML = '';
+  todos.forEach(todo => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${todo.task}</td>
+      <td>${todo.priority}</td>
+      <td><button class="btn btn-danger btn-sm" data-id="${todo.id}">Delete</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+tbody.addEventListener('click', async (e) => {
+  if(e.target.tagName === 'BUTTON') {
+    const id = e.target.getAttribute('data-id');
+    await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+    fetchTodos();
+  }
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorMsg.textContent = '';
+
+  if (taskInput.value.length > 14) {
+    errorMsg.textContent = "Task must be 14 characters or less.";
+    return;
+  }
+
+  // Check current number of items
+  const res = await fetch(apiUrl);
+  const todos = await res.json();
+  if (todos.length >= 6) {
+    errorMsg.textContent = "Maximum 6 TODO items allowed.";
+    return;
+  }
+
+  await fetch(apiUrl, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      task: taskInput.value,
+      priority: priorityInput.value
+    })
+  });
+
+  taskInput.value = '';
+  priorityInput.value = 'normal';
+  fetchTodos();
+});
+
+fetchTodos();
+</script>
+</body>
+</html>
