@@ -1,113 +1,66 @@
-Here is a complete README.md for your project:
+# Dynamic Todo Wallpaper
 
-````markdown
-# Dynamic Wallpaper with TODO List
+A full-stack solution to keep your goals front and center. This project features a Python/Flask server to manage your tasks and a PowerShell client that dynamically renders them onto your desktop wallpaper.
 
-This project creates a dynamic desktop wallpaper that fetches TODO items from a Python Flask server, writes them on a custom wallpaper image, and sets it as the desktop background automatically.
+## Overview
 
----
+There are two main components:
+1.  **Server (`main.py`)**: A Flask web application that manages a TODO list in a generic SQLite database and serves the base wallpaper image.
+2.  **Client (`webBasedWallPaper.ps1`)**: A PowerShell script that fetches the TODO list from the server, draws the text onto a template image using .NET graphics libraries, and sets it as the active Windows desktop background.
 
 ## Features
-
-- Python Flask server with SQLite to add/delete TODO items via a web UI.
-- PowerShell script fetches TODOs from the server and updates the wallpaper.
-- Customizable wallpaper template with text and shadow effects.
-- Runs automatically at system startup.
-
----
+- **Centralized Task Management**: Add/Remove tasks via a web interface.
+- **Dynamic Rendering**: Wallpaper updates automatically with your current tasks.
+- **Visual Priorities**: High-priority tasks are highlighted in red.
+- **Context Menu Integration**: Optional registry script to refresh the wallpaper on-demand from the desktop context menu.
 
 ## Setup
 
-### Server Side (Python Flask)
+### 1. Server Setup (Python)
+If you want to host your own server (or run it locally):
 
-1. Install Python dependencies:
-   ```bash
-   pip install flask flask-cors flask-sqlalchemy
-````
+1.  **Install Dependencies**:
+    ```bash
+    pip install flask flask-cors
+    ```
+2.  **Run the Server**:
+    ```bash
+    python main.py
+    ```
+    The server will start on `http://localhost:5000`.
 
-2. Run the Flask app:
+### 2. Client Setup (Windows)
 
-   ```bash
-   python app.py
-   ```
-3. Access the web UI at `http://localhost:5000` to add/delete TODOs.
+1.  **Configure the Script**:
+    Open `webBasedWallPaper.ps1` and update the `$todoList` URI to point to your server:
+    ```powershell
+    $todoList = Invoke-RestMethod -Uri "http://localhost:5000/todos" # or your hosted URL
+    ```
 
----
+2.  **Run Manually**:
+    Open PowerShell as Administrator and run:
+    ```powershell
+    .\webBasedWallPaper.ps1
+    ```
 
-### Client Side (PowerShell Script)
+### 3. Optional: Context Menu Integration
+You can add a "Run WebBasedWallpaper" option to your desktop right-click menu.
 
-1. Edit `webBasedWallPaper.ps1` script:
+1.  Open `add_run_wallpaper.reg.txt`.
+2.  **CRITICAL**: Edit the path in the file to match the actual location of your `webBasedWallPaper.ps1` script.
+    ```text
+    "C:\\Users\\YourName\\Path\\To\\webBasedWallPaper.ps1"
+    ```
+    *Note: Use double backslashes (`\\`) for paths in .reg files.*
+3.  Rename the file from `.txt` to `.reg`.
+4.  Double-click the `.reg` file to import it into the Windows Registry.
 
-   * Set `$apiUrl` to your server address (e.g., `http://localhost:5000/todos`).
-   * Set `$inputImage` to your wallpaper template path.
-   * Set `$outputImage` to the desired output wallpaper path.
-
-2. Run the script manually to test:
-
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File "C:\path\to\webBasedWallPaper.ps1"
-   ```
-
-3. Add the script to run at system startup:
-
-#### Option 1: Startup Folder
-
-* Press `Win + R`, type `shell:startup`, press Enter.
-* Add a shortcut with target:
-
-  ```
-  powershell.exe -ExecutionPolicy Bypass -File "C:\path\to\webBasedWallPaper.ps1"
-  ```
-
-#### Option 2: Task Scheduler
-
-* Open Task Scheduler → Create Task.
-* Set trigger to “At log on”.
-* Set action to run:
-
-  ```
-  powershell.exe -ExecutionPolicy Bypass -File "C:\path\to\webBasedWallPaper.ps1"
-  ```
-* Save and exit.
-
----
-
-## How it works
-
-* Flask server holds TODO list in SQLite.
-* PowerShell script fetches TODO JSON from Flask API.
-* Script writes TODO text on wallpaper image with shadow.
-* Sets new wallpaper as desktop background.
-* Runs automatically at login or manually.
-
----
-
-## Customization
-
-* Change fonts, colors, shadow effects in the PowerShell script.
-* Modify Flask templates for a different UI.
-* Change wallpaper template image.
-
----
-
-## Troubleshooting
-
-* Make sure PowerShell execution policy allows running scripts:
-
-  ```powershell
-  Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-  ```
-* Confirm Flask server is running and accessible from the client machine.
-* Check firewall or CORS settings if API calls fail.
-
----
+## File Structure
+- `main.py`: Flask server entry point.
+- `webBasedWallPaper.ps1`: Core client script for image manipulation and wallpaper setting.
+- `templates/`: HTML templates for the web UI.
+- `todos.db`: SQLite database (auto-generated).
+- `add_run_wallpaper.reg.txt`: Template for registry integration.
 
 ## License
-
-MIT License
-
----
-
-## Author
-
-Nitish
+MIT License - Free to use and modify.
