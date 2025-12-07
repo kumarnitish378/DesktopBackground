@@ -40,8 +40,19 @@ $inputImage = Join-Path $PSScriptRoot $config.paths.templateInput
 $outputImage = Join-Path $PSScriptRoot $config.paths.wallpaperOutput
 
 if (-Not (Test-Path $inputImage)) {
-    Write-Error "Template image not found at $inputImage"
-    exit 1
+    Write-Warning "Template image not found locally. Attempting download from server..."
+    # Construct URL for template download (relative to API URL or fixed)
+    # Using the fixed URL as requested:
+    $templateUrl = "https://nitish378.pythonanywhere.com/template.jpg"
+    
+    try {
+        Invoke-WebRequest -Uri $templateUrl -OutFile $inputImage -ErrorAction Stop
+        Write-Host "Template downloaded successfully to $inputImage"
+    }
+    catch {
+        Write-Error "Failed to download template from $templateUrl. Error: $_"
+        exit 1
+    }
 }
 
 # Graphics Logic
