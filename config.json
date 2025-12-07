@@ -1,0 +1,20 @@
+{
+    "apiUrl": "http://localhost:5000/todos",
+    "paths": {
+        "templateInput": "assets/template.png",
+        "wallpaperOutput": "templateEdit.png"
+    },
+    "layout": {
+        "fontFamily": "Cooper Hewitt",
+        "fontSize": 48,
+        "startY": 140,
+        "lineHeight": 145,
+        "textX": 1215,
+        "shadowOffsetXY": 2
+    },
+    "colors": {
+        "highPriority": "Red",
+        "normalPriority": "Black",
+        "shadow": "Gray"
+    }
+}

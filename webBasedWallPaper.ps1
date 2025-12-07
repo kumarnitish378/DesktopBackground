@@ -1,42 +1,60 @@
+# Load Configuration
+$configPath = Join-Path $PSScriptRoot "config.json"
+if (-not (Test-Path $configPath)) {
+    Write-Error "Configuration file 'config.json' not found."
+    exit 1
+}
+$config = Get-Content $configPath -Raw | ConvertFrom-Json
+
 # Fetch TODO JSON from API
-$todoList = Invoke-RestMethod -Uri "https://nitish378.pythonanywhere.com/todos"
+try {
+    $todoList = Invoke-RestMethod -Uri $config.apiUrl -ErrorAction Stop
+}
+catch {
+    Write-Warning "Could not connect to API at $($config.apiUrl). Proceeding with empty list or previous state."
+    $todoList = @()
+}
 
 Add-Type -AssemblyName System.Drawing
 
-$imageUrl = "https://nitish378.pythonanywhere.com/template.jpg"
-$inputImage = "template.png"
+# Define Paths
+$inputImage = Join-Path $PSScriptRoot $config.paths.templateInput
+$outputImage = Join-Path $PSScriptRoot $config.paths.wallpaperOutput
 
 if (-Not (Test-Path $inputImage)) {
-    Invoke-WebRequest -Uri $imageUrl -OutFile $inputImage
+    Write-Error "Template image not found at $inputImage"
+    exit 1
 }
 
-$outputImage = "$(Get-Location)\templateEdit.png"
-
+# Graphics Logic
 $bitmap = [System.Drawing.Image]::FromFile($inputImage)
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
-$font = New-Object System.Drawing.Font("Cooper Hewitt", 48)
-$y = 140
+$font = New-Object System.Drawing.Font($config.layout.fontFamily, $config.layout.fontSize)
 
-
-$shadowBrush = [System.Drawing.Brushes]::Gray
+$y = $config.layout.startY
+$shadowOffset = $config.layout.shadowOffsetXY
+$shadowBrush = [System.Drawing.Brushes]::($config.colors.shadow)
 
 foreach ($item in $todoList) {
     if ($item.priority -eq "high") {
-        $brush = [System.Drawing.Brushes]::Red
+        $brush = [System.Drawing.Brushes]::($config.colors.highPriority)
     } else {
-        $brush = [System.Drawing.Brushes]::Black
+        $brush = [System.Drawing.Brushes]::($config.colors.normalPriority)
     }
-    # $point = New-Object System.Drawing.PointF($x, $y)
-    $graphics.DrawString($item.task, $font, $shadowBrush, 1217, ($y - 5))
-    $graphics.DrawString($item.task, $font, $brush, 1215, $y)
-    $y += 145
+    
+    # Draw Shadow
+    $graphics.DrawString($item.task, $font, $shadowBrush, ($config.layout.textX + $shadowOffset), ($y - $shadowOffset))
+    # Draw Text
+    $graphics.DrawString($item.task, $font, $brush, $config.layout.textX, $y)
+    
+    $y += $config.layout.lineHeight
 }
 
 $graphics.Dispose()
 $bitmap.Save($outputImage, [System.Drawing.Imaging.ImageFormat]::Jpeg)
 $bitmap.Dispose()
 
-# Set wallpaper code here...
+# Set Wallpaper
 Add-Type @"
 using System.Runtime.InteropServices;
 public class Wallpaper {
@@ -44,4 +62,11 @@ public class Wallpaper {
     public static extern bool SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
 }
 "@
-[Wallpaper]::SystemParametersInfo(20, 0, $outputImage, 3)
+
+try {
+    [Wallpaper]::SystemParametersInfo(20, 0, $outputImage, 3)
+    Write-Host "Wallpaper updated successfully."
+}
+catch {
+    Write-Error "Failed to set wallpaper."
+}

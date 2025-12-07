@@ -43,7 +43,7 @@ def delete_todo(todo_id):
 
 @app.route('/template.jpg')
 def get_image():
-    return send_file('2.png', mimetype='image/jpeg')
+    return send_file('assets/template.png', mimetype='image/jpeg')
 
 
 if __name__ == "__main__":

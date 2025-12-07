@@ -4,37 +4,31 @@ A full-stack solution to keep your goals front and center. This project features
 
 ## Overview
 
-There are two main components:
-1.  **Server (`main.py`)**: A Flask web application that manages a TODO list in a generic SQLite database and serves the base wallpaper image.
-2.  **Client (`webBasedWallPaper.ps1`)**: A PowerShell script that fetches the TODO list from the server, draws the text onto a template image using .NET graphics libraries, and sets it as the active Windows desktop background.
-
-## Features
-- **Centralized Task Management**: Add/Remove tasks via a web interface.
-- **Dynamic Rendering**: Wallpaper updates automatically with your current tasks.
-- **Visual Priorities**: High-priority tasks are highlighted in red.
-- **Context Menu Integration**: Optional registry script to refresh the wallpaper on-demand from the desktop context menu.
+- **Server (`main.py`)**: Flask web app managing tasks in `todos.db`.
+- **Client (`webBasedWallPaper.ps1`)**: PowerShell script that fetches tasks and updates the desktop background.
+- **Configurable**: Customize colors, fonts, and paths via `config.json`.
 
 ## Setup
 
 ### 1. Server Setup (Python)
-If you want to host your own server (or run it locally):
-
 1.  **Install Dependencies**:
     ```bash
-    pip install flask flask-cors
+    pip install -r requirements.txt
     ```
 2.  **Run the Server**:
     ```bash
     python main.py
     ```
-    The server will start on `http://localhost:5000`.
+    The server starts on `http://localhost:5000`.
 
 ### 2. Client Setup (Windows)
-
-1.  **Configure the Script**:
-    Open `webBasedWallPaper.ps1` and update the `$todoList` URI to point to your server:
-    ```powershell
-    $todoList = Invoke-RestMethod -Uri "http://localhost:5000/todos" # or your hosted URL
+1.  **Configuration**:
+    Check `config.json`. You can adjust the `apiUrl` if your server is hosted elsewhere, or change `layout` settings to fit your screen.
+    ```json
+    {
+      "apiUrl": "http://localhost:5000/todos",
+      "layout": { "fontSize": 48 }
+    }
     ```
 
 2.  **Run Manually**:
@@ -43,24 +37,16 @@ If you want to host your own server (or run it locally):
     .\webBasedWallPaper.ps1
     ```
 
-### 3. Optional: Context Menu Integration
-You can add a "Run WebBasedWallpaper" option to your desktop right-click menu.
-
+### 3. Context Menu Integration
+To add a "Run WebBasedWallpaper" option to your desktop context menu:
 1.  Open `add_run_wallpaper.reg.txt`.
-2.  **CRITICAL**: Edit the path in the file to match the actual location of your `webBasedWallPaper.ps1` script.
-    ```text
-    "C:\\Users\\YourName\\Path\\To\\webBasedWallPaper.ps1"
-    ```
-    *Note: Use double backslashes (`\\`) for paths in .reg files.*
-3.  Rename the file from `.txt` to `.reg`.
-4.  Double-click the `.reg` file to import it into the Windows Registry.
+2.  Update the path to match your `webBasedWallPaper.ps1` location.
+3.  Rename to `.reg` and run it.
 
-## File Structure
-- `main.py`: Flask server entry point.
-- `webBasedWallPaper.ps1`: Core client script for image manipulation and wallpaper setting.
-- `templates/`: HTML templates for the web UI.
-- `todos.db`: SQLite database (auto-generated).
-- `add_run_wallpaper.reg.txt`: Template for registry integration.
+## Development
+- **Assets**: Template images are in `assets/`.
+- **Testing**: Run unit tests with `python -m unittest discover tests`.
+- **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
-MIT License - Free to use and modify.
+MIT License
