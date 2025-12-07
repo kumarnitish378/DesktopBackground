@@ -1,0 +1,7 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\Run WebBasedWallpaper]
+@="Run WebBasedWallpaper"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\Run WebBasedWallpaper\command]
+@="powershell.exe -ExecutionPolicy Bypass -File \"C:\\Users\\nitis\\OneDrive\\Desktop\\DesktopBackground\\webBasedWallPaper.ps1\""

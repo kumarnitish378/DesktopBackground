@@ -1,5 +1,5 @@
 # Fetch TODO JSON from API
-$todoList = Invoke-RestMethod -Uri "https://nitish378.pythonanywhere.com//todos"
+$todoList = Invoke-RestMethod -Uri "https://nitish378.pythonanywhere.com/todos"
 
 Add-Type -AssemblyName System.Drawing
 
