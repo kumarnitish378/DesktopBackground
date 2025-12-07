@@ -1,5 +1,6 @@
 {
     "apiUrl": "https://nitish378.pythonanywhere.com/todos",
+    "apiKey": "YOUR_API_KEY_HERE",
     "paths": {
         "templateInput": "assets/template.png",
         "wallpaperOutput": "templateEdit.png"
