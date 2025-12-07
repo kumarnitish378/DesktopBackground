@@ -3,23 +3,38 @@ import os
 import json
 from main import app, init_db
 
+from flask import session
+
 class DesktopBackgroundTestCase(unittest.TestCase):
     def setUp(self):
         # Configure app for testing
         app.config['TESTING'] = True
+        app.config['DATABASE'] = "test_todos.db" # Use isolated DB
+        app.secret_key = 'test' 
         self.app = app.test_client()
         self.db_name = "test_todos.db"
         
-        # Patch the database filename in main.py logic (if it weren't hardcoded)
-        # Since it's hardcoded to 'todos.db' in main.py, we have to be careful.
-        # Ideally main.py should accept a config. For now, we test the endpoints 
-        # knowing it might create a local DB.
+        # Clean up start
+        if os.path.exists(self.db_name):
+            try:
+                os.remove(self.db_name)
+            except OSError:
+                pass
         
-        init_db()
+        # Initialize the test DB
+        with app.app_context():
+            init_db()
 
-    def test_index(self):
+    def tearDown(self):
+        if os.path.exists(self.db_name):
+            try:
+                os.remove(self.db_name)
+            except OSError:
+                pass
+
+    def test_index_redirect(self):
         response = self.app.get('/')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302) # Should redirect to login
 
     def test_auth_and_todos(self):
         # 1. Register
@@ -46,17 +61,12 @@ class DesktopBackgroundTestCase(unittest.TestCase):
             
     def test_api_access(self):
         # Register to get API Key (mocking DB access to get it)
-        try:
-            os.remove(self.db_name)
-        except OSError:
-            pass
-        init_db()
-        
+        # Note: setUp already ran init_db on a fresh DB
         with self.app as c:
              c.post('/register', data=dict(username='apiuser', password='password'))
-             # Manually fetch API key since we can't scrape it easily from HTML in unit test
+             # Manually fetch API key
              import sqlite3
-             with sqlite3.connect("todos.db") as conn:
+             with sqlite3.connect(self.db_name) as conn:
                  cursor = conn.execute("SELECT api_key FROM users WHERE username='apiuser'")
                  api_key = cursor.fetchone()[0]
         

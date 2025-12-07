@@ -9,10 +9,11 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24) # Secret key for sessions
 CORS(app)
 
-DB_NAME = "todos.db"
+def get_db_path():
+    return app.config.get('DATABASE', 'todos.db')
 
 def init_db():
-    with sqlite3.connect(DB_NAME) as conn:
+    with sqlite3.connect(get_db_path()) as conn:
         # Create Users Table
         conn.execute('''CREATE TABLE IF NOT EXISTS users
                      (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +35,7 @@ def index():
         return redirect(url_for('login'))
     
     # Fetch user's API key
-    with sqlite3.connect(DB_NAME) as conn:
+    with sqlite3.connect(get_db_path()) as conn:
         cursor = conn.execute("SELECT api_key FROM users WHERE id = ?", (session['user_id'],))
         row = cursor.fetchone()
         api_key = row[0] if row else "Error"
@@ -47,7 +48,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        with sqlite3.connect(DB_NAME) as conn:
+        with sqlite3.connect(get_db_path()) as conn:
             cursor = conn.execute("SELECT id, password FROM users WHERE username = ?", (username,))
             user = cursor.fetchone()
             
@@ -68,7 +69,7 @@ def register():
         hashed_pw = generate_password_hash(password)
         
         try:
-            with sqlite3.connect(DB_NAME) as conn:
+            with sqlite3.connect(get_db_path()) as conn:
                 conn.execute("INSERT INTO users (username, password, api_key) VALUES (?, ?, ?)", 
                              (username, hashed_pw, api_key))
             return redirect(url_for('login'))
@@ -93,7 +94,7 @@ def get_todos():
     # 2. Check API Key (PowerShell Client)
     elif 'X-API-KEY' in request.headers:
         api_key = request.headers['X-API-KEY']
-        with sqlite3.connect(DB_NAME) as conn:
+        with sqlite3.connect(get_db_path()) as conn:
             cursor = conn.execute("SELECT id FROM users WHERE api_key = ?", (api_key,))
             row = cursor.fetchone()
             if row:
@@ -102,7 +103,7 @@ def get_todos():
     if user_id is None:
         return jsonify({"error": "Unauthorized"}), 401
 
-    with sqlite3.connect(DB_NAME) as conn:
+    with sqlite3.connect(get_db_path()) as conn:
         cursor = conn.execute("SELECT id, task, priority FROM todos WHERE user_id = ?", (user_id,))
         todos = [{"id": row[0], "task": row[1], "priority": row[2]} for row in cursor.fetchall()]
     return jsonify(todos)
@@ -113,7 +114,7 @@ def add_todo():
         return jsonify({"error": "Unauthorized"}), 401
         
     data = request.get_json()
-    with sqlite3.connect(DB_NAME) as conn:
+    with sqlite3.connect(get_db_path()) as conn:
         conn.execute("INSERT INTO todos (task, priority, user_id) VALUES (?, ?, ?)", 
                      (data["task"], data.get("priority", "normal"), session['user_id']))
     return jsonify({"status": "added"}), 201
@@ -123,7 +124,7 @@ def delete_todo(todo_id):
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
-    with sqlite3.connect(DB_NAME) as conn:
+    with sqlite3.connect(get_db_path()) as conn:
         cursor = conn.execute("DELETE FROM todos WHERE id = ? AND user_id = ?", (todo_id, session['user_id']))
         if cursor.rowcount:
             return jsonify({"status": "deleted"})
